@@ -1,0 +1,40 @@
+{# templates/clientes.html.twig #}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Lista de Clientes</title>
+</head>
+<body>
+    <h1>Lista de Clientes</h1>
+
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Nome</th>
+                <th>Telefone</th>
+                <th>CPF</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for cliente in clientes %}
+                <tr>
+                    <td>{{ cliente.id }}</td>
+                    <td>{{ cliente.nomeCliente }}</td>
+                    <td>{{ cliente.telefoneCliente }}</td>
+                    <td>{{ cliente.cpfCliente }}</td>
+                    <td>
+                        <a href="{{ path('detalhes_cliente', {'id': cliente.id}) }}">Detalhes</a>
+                        <a href="{{ path('editar_cliente', {'id': cliente.id}) }}">Editar</a>
+                        <a href="{{ path('excluir_cliente', {'id': cliente.id}) }}" onclick="return confirm('Tem certeza que deseja excluir este cliente?')">Excluir</a>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <a href="{{ path('cadastrar_cliente') }}">Cadastrar Novo Cliente</a>
+</body>
+</html>

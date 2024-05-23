@@ -89,32 +89,52 @@ class ProdutosController extends AbstractController
     }
 
     #[Route('/produtos/consultar', name: 'produtos_consultar', methods: ['GET'])]
-    public function consultarTodos(EntityManagerInterface $em): JsonResponse
-    {
-        // Busca todos os produtos
-        $produtos = $em->getRepository(Produtos::class)->findAll();
+public function consultarTodos(EntityManagerInterface $em): JsonResponse
+{
+    // Busca todos os produtos
+    $produtos = $em->getRepository(Produtos::class)->findAll();
 
-        // Se não houver produtos, retorna 404
-        if (!$produtos) {
-            return new JsonResponse(null, Response::HTTP_NOT_FOUND);
-        }
+    // Se não houver produtos, retorna 404
+    if (!$produtos) {
+        return new JsonResponse(null, Response::HTTP_NOT_FOUND);
+    }
+    
+    // Retorna os dados de todos os produtos com createdAt e updatedAt
+    $response = [];
+    foreach ($produtos as $produto) {
+        $produtosPedidos = [];
+        foreach ($produto->getPedidos() as $pedido) {
+            // Obtém o produto associado ao pedido
+            $produtoDoPedido = $pedido->getProduto();
 
-        // Retorna os dados de todos os produtos com createdAt e updatedAt
-        $response = [];
-        foreach ($produtos as $produto) {
-            $response[] = [
-                'id' => $produto->getId(),
-                'nome' => $produto->getNome(),
-                'preco' => $produto->getPreco(),
-                'quantidade' => $produto->getQuantidade(),
-                'tipo' => $produto->getTipo(),
-                'createdAt' => $produto->getCreatedAt()->format('Y-m-d H:i:s'),
-                'updatedAt' => $produto->getUpdatedAt()->format('Y-m-d H:i:s')
+            // Adiciona os dados do pedido ao array de pedidos
+            $produtosPedidos[] = [
+                'id' => $pedido->getId(),
+                'cpfCliente' => $pedido->getCpfCliente()->getCpfCliente(),
+                'placaCarro' => $pedido->getPlacaCarro()->getPlaca(),
+                'forma_de_pagamento' => $pedido->getFormaDePagamento(),
+                'nome_produto' => $produtoDoPedido->getNome(),
+                'tipo_produto' => $produtoDoPedido->getTipo(),
+                'total' => $pedido->getTotal(),
+                'createdAt' => $pedido->getCreatedAt()->format('Y-m-d H:i:s')
             ];
         }
-
-        return new JsonResponse($response, Response::HTTP_OK);
+        $response[] = [
+            'id' => $produto->getId(),
+            'nome' => $produto->getNome(),
+            'preco' => $produto->getPreco(),
+            'quantidade' => $produto->getQuantidade(),
+            'tipo' => $produto->getTipo(),
+            'createdAt' => $produto->getCreatedAt()->format('Y-m-d H:i:s'),
+            'updatedAt' => $produto->getUpdatedAt()->format('Y-m-d H:i:s'),
+            'pedidos' => $produtosPedidos
+        ];
+      
     }
+
+    return new JsonResponse($response, Response::HTTP_OK);
+}
+    
 
     #[Route('/produtos/consultar/{id}', name: 'produtos_consultar_por_id', methods: ['GET'])]
     public function consultarPorId($id, EntityManagerInterface $em): JsonResponse
@@ -143,4 +163,5 @@ class ProdutosController extends AbstractController
 
         return new JsonResponse($response, Response::HTTP_OK);
     }
+    
 }

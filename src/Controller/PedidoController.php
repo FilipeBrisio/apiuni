@@ -264,35 +264,32 @@ class PedidoController extends AbstractController
     {
         // Recupera o registro anterior do caixa, se existir
         $caixaAnterior = $this->getCaixaAnterior($em);
-
-        // Define a hora da consulta atual
-        $horaAtual = (new \DateTimeImmutable('now', new \DateTimeZone('America/Sao_Paulo')))->format('Y-m-d H:i:s');
-
-        // Busca pedidos criados após a última consulta
+    
+        // Busca pedidos criados após o último registro do caixa
         $novosPedidos = $this->getNovosPedidos($em, $caixaAnterior['ultima_consulta']);
-
+    
         // Se não houver novos pedidos, retorna o caixa anterior
         if (empty($novosPedidos)) {
             return new JsonResponse($caixaAnterior, Response::HTTP_OK);
         }
-
-        // Calcula as somas por forma de pagamento para os novos pedidos
+    
+        // Calcula as novas somas por forma de pagamento
         $novasSomasPorFormaDePagamento = $this->calcularSomasPorFormaDePagamento($novosPedidos);
-
-        // Adiciona as novas somas ao caixa anterior, indexando pela hora da consulta atual
-        $caixaAtualizado = $caixaAnterior;
-        $caixaAtualizado['consultas'][$horaAtual] = $novasSomasPorFormaDePagamento;
-
-        // Atualiza o registro do caixa com a hora da última consulta
-        $caixaAtualizado['ultima_consulta'] = $horaAtual;
-
-        // Atualiza o registro do caixa no banco de dados
-        $this->atualizarRegistroCaixa($em, $caixaAtualizado);
-
-        // Retorna o caixa atualizado
-        return new JsonResponse($caixaAtualizado, Response::HTTP_OK);
+    
+        // Adiciona as novas somas ao caixa anterior
+        foreach ($novasSomasPorFormaDePagamento as $formaDePagamento => $total) {
+            if (!isset($caixaAnterior['caixa'][$formaDePagamento])) {
+                $caixaAnterior['caixa'][$formaDePagamento] = 0;
+            }
+            $caixaAnterior['caixa'][$formaDePagamento] += $total;
+        }
+    
+        // Atualiza o registro do caixa com a última consulta
+        $caixaAnterior['ultima_consulta'] = (new \DateTimeImmutable('now', new \DateTimeZone('America/Sao_Paulo')))->format('Y-m-d H:i:s');
+        $this->atualizarRegistroCaixa($em, $caixaAnterior);
+    
+        return new JsonResponse($caixaAnterior, Response::HTTP_OK);
     }
-
     
     private function getCaixaAnterior(EntityManagerInterface $em): array
     {

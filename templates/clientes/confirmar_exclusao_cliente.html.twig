@@ -1,0 +1,18 @@
+{# templates/confirmar_exclusao_cliente.html.twig #}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Confirmar Exclusão de Cliente</title>
+</head>
+<body>
+    <h1>Confirmar Exclusão de Cliente</h1>
+
+    <p>Você tem certeza que deseja excluir o cliente {{ cliente.nomeCliente }}?</p>
+
+    <form action="{{ path('excluir_cliente', {'id': cliente.id}) }}" method="post">
+        <button type="submit">Confirmar Exclusão</button>
+        <a href="{{ path('lista_clientes') }}">Cancelar</a>
+    </form>
+</body>
+</html>

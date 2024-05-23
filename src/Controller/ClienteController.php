@@ -12,36 +12,43 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 
 class ClienteController extends AbstractController
 {
-    #[Route('/cliente/cadastrar', name: 'cliente_cadastrar', methods: ['POST'])]
-    public function cadastrar(Request $request, EntityManagerInterface $em): JsonResponse
-    {
-        $data = json_decode($request->getContent(), true);
 
-        // Verifica se o CPF já está cadastrado
-        $existingCliente = $em->getRepository(Cliente::class)->findOneBy(['cpfCliente' => $data['cpfCliente']]);
-        if ($existingCliente) {
-            return new JsonResponse([
-                'status' => '400 - Bad Request',
-                'mensagemUsuario' => 'O CPF informado já está cadastrado. Não será possível continuar com esta operação.',
-                'mensagemTecnica' => 'Durante o cadastro aconteceu a seguinte exceção: DataIntegrityViolationException - Violação de integridade de dados.'
-            ], Response::HTTP_BAD_REQUEST);
+    #[Route('/cliente/cadastrar', name: 'cliente_cadastrar_form', methods: ['GET'])]
+    public function mostrarFormularioCadastro(): Response
+    {
+        return $this->render('clientes/cadastrar_cliente.html.twig');
+    }
+    
+    #[Route('/cliente/cadastrar', name: 'cliente_cadastrar', methods: ['POST'])]
+    public function cadastrar(Request $request, EntityManagerInterface $em): Response
+    {
+        // Obtém os dados do formulário
+        $data = $request->request->all();
+
+        // Verifica se os dados necessários estão presentes no array $data
+        if (!isset($data['nome']) || !isset($data['telefone']) || !isset($data['cpf'])) {
+            // Se algum dado estiver faltando, redireciona de volta para o formulário com uma mensagem de erro
+            return $this->redirectToRoute('cliente_cadastrar_form', ['error' => 'Por favor, preencha todos os campos corretamente.']);
         }
 
         // Cria uma nova instância de Cliente
         $cliente = new Cliente();
-        $cliente->setNomeCliente($data['nomeCliente']);
-        $cliente->setTelefoneCliente($data['telefoneCliente']);
-        $cliente->setCpfCliente($data['cpfCliente']);
+        $cliente->setNomeCliente($data['nome']);
+        $cliente->setTelefoneCliente($data['telefone']);
+        $cliente->setCpfCliente($data['cpf']);
         $cliente->setCredito(5000);
-        $cliente->setCreatedAt(new \DateTimeImmutable('now', new \DateTimeZone('America/Sao_Paulo'))); // Adiciona 5000 de crédito por padrão
-        $cliente->setUpdatedAt(new \DateTimeImmutable('now', new \DateTimeZone('America/Sao_Paulo'))); // Adiciona 5000 de crédito por padrão
+        $cliente->setCreatedAt(new \DateTimeImmutable('now', new \DateTimeZone('America/Sao_Paulo')));
+        $cliente->setUpdatedAt(new \DateTimeImmutable('now', new \DateTimeZone('America/Sao_Paulo')));
 
         // Persiste os dados no banco de dados
         $em->persist($cliente);
         $em->flush();
 
-        return new JsonResponse(null, Response::HTTP_CREATED);
+        // Redireciona para uma página de sucesso
+        return $this->redirectToRoute('cliente_consultar');
     }
+
+    
 
     #[Route('/cliente/atualizar/{id}', name: 'cliente_atualizar', methods: ['PUT'])]
     public function atualizar($id, Request $request, EntityManagerInterface $em): JsonResponse

@@ -1,0 +1,20 @@
+{# templates/detalhes_cliente.html.twig #}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Detalhes do Cliente</title>
+</head>
+<body>
+    <h1>Detalhes do Cliente</h1>
+
+    <ul>
+        <li>ID: {{ cliente.id }}</li>
+        <li>Nome: {{ cliente.nomeCliente }}</li>
+        <li>Telefone: {{ cliente.telefoneCliente }}</li>
+        <li>CPF: {{ cliente.cpfCliente }}</li>
+    </ul>
+
+    <a href="{{ path('lista_clientes') }}">Voltar para a Lista de Clientes</a>
+</body>
+</html>
